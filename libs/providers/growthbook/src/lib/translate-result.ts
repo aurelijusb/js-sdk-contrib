@@ -24,6 +24,10 @@ export default function translateResult<T>(result: FeatureResult, defaultValue: 
     value: result.value === null ? defaultValue : result.value,
     reason: result.source,
     variant: result.experimentResult?.key,
+    flagMetadata: result.experiment?.phase && result.experiment?.seed ? {
+      'experimentPhase': result.experiment.phase,
+      'experimentSeed': result.experiment.seed,
+    } : undefined
   };
 
   if (FEATURE_RESULT_ERRORS.includes(result.source)) {
