@@ -80,7 +80,11 @@ describe('GrowthbookClientProvider', () => {
       const res = ofClient.getBooleanDetails(testFlagKey, false);
       expect(res).toEqual({
         flagKey: testFlagKey,
-        flagMetadata: {},
+        flagMetadata: {
+          ruleId: 'test',
+          source: 'experiment',
+          experimentResultHashValue: 'abc',
+        },
         value: true,
         reason: 'experiment',
         variant: 'treatment',
@@ -110,7 +114,11 @@ describe('GrowthbookClientProvider', () => {
       const res = ofClient.getStringDetails(testFlagKey, '');
       expect(res).toEqual({
         flagKey: testFlagKey,
-        flagMetadata: {},
+        flagMetadata: {
+          ruleId: 'test',
+          source: 'experiment',
+          experimentResultHashValue: 'abc',
+        },
         value: 'Experiment fearlessly, deliver confidently',
         reason: 'experiment',
         variant: 'treatment',
@@ -140,7 +148,11 @@ describe('GrowthbookClientProvider', () => {
       const res = ofClient.getNumberDetails(testFlagKey, 1);
       expect(res).toEqual({
         flagKey: testFlagKey,
-        flagMetadata: {},
+        flagMetadata: {
+          ruleId: 'test',
+          source: 'experiment',
+          experimentResultHashValue: 'abc',
+        },
         value: 12345,
         reason: 'experiment',
         variant: 'treatment',
@@ -170,10 +182,62 @@ describe('GrowthbookClientProvider', () => {
       const res = ofClient.getObjectDetails(testFlagKey, {});
       expect(res).toEqual({
         flagKey: testFlagKey,
-        flagMetadata: {},
+        flagMetadata: {
+          ruleId: 'test',
+          source: 'experiment',
+          experimentResultHashValue: 'abc',
+        },
         value: { test: true },
         reason: 'experiment',
         variant: 'treatment',
+      });
+    });
+  });
+
+  describe('details resolvers', () => {
+    it('should include advanced experiment metadata', async () => {
+      jest.spyOn(GrowthBook.prototype, 'evalFeature').mockImplementation(() => ({
+        value: true,
+        source: 'experiment',
+        on: true,
+        off: false,
+        ruleId: 'fr_a4obdoommrzcapr',
+        experiment: {
+          key: 'tracking-key',
+          variations: [false, true],
+          name: 'Experiment1',
+          phase: '0',
+          seed: 'e29f8131-b6ba-4a39-b9cd-e34d4bb74b33',
+        },
+        experimentResult: {
+          value: true,
+          variationId: 1,
+          key: 'id1',
+          name: 'Variation 1',
+          inExperiment: true,
+          hashAttribute: 'id',
+          hashValue: '1',
+          featureId: 'feature1',
+        },
+      }));
+
+      const res = await ofClient.getBooleanDetails('feature1', false);
+
+      expect(res).toEqual({
+        flagKey: 'feature1',
+        flagMetadata: {
+          ruleId: 'fr_a4obdoommrzcapr', // To debug which rule triggered the logic
+          source: 'experiment', // E.g. was logic from experiment, forced or default value
+          experimentName: 'Experiment1', 
+          experimentKey: 'tracking-key',
+          experimentPhase: '0', // Increases when re-randomize experiment traffic
+          experimentSeed: 'e29f8131-b6ba-4a39-b9cd-e34d4bb74b33', // Useful to have same traffic bucketing but different experiments
+          experimentResultName: 'Variation 1', // Variation Name in Growthbook Experiment
+          experimentResultHashValue: '1',
+        },
+        value: true,
+        reason: 'experiment',
+        variant: 'id1',
       });
     });
   });

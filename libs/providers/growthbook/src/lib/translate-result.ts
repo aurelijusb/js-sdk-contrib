@@ -1,8 +1,21 @@
 import type { FeatureResult } from '@growthbook/growthbook';
-import type { ResolutionDetails } from '@openfeature/server-sdk';
+import type { FlagMetadata, ResolutionDetails } from '@openfeature/server-sdk';
 import { ErrorCode, TypeMismatchError } from '@openfeature/server-sdk';
 
 const FEATURE_RESULT_ERRORS = ['unknownFeature', 'cyclicPrerequisite'];
+
+function buildFlagMetadata(result: FeatureResult): FlagMetadata {
+  return {
+    ruleId: result.ruleId,
+    source: result.source,
+    ...(result.experiment?.name !== undefined && { experimentName: result.experiment.name }),
+    ...(result.experiment?.key !== undefined && { experimentKey: result.experiment.key }),
+    ...(result.experiment?.phase !== undefined && { experimentPhase: result.experiment.phase }),
+    ...(result.experiment?.seed !== undefined && { experimentSeed: result.experiment.seed }),
+    ...(result.experimentResult?.name !== undefined && { experimentResultName: result.experimentResult.name }),
+    ...(result.experimentResult?.hashValue !== undefined && { experimentResultHashValue: result.experimentResult.hashValue }),
+  };
+}
 
 function translateError(errorKind?: string): ErrorCode {
   switch (errorKind) {
@@ -24,6 +37,7 @@ export default function translateResult<T>(result: FeatureResult, defaultValue: 
     value: result.value === null ? defaultValue : result.value,
     reason: result.source,
     variant: result.experimentResult?.key,
+    flagMetadata: buildFlagMetadata(result),
   };
 
   if (FEATURE_RESULT_ERRORS.includes(result.source)) {
