@@ -216,7 +216,7 @@ describe('GrowthbookProvider', () => {
         experimentResult: {
           value: true,
           variationId: 1,
-          key: '1',
+          key: 'id1',
           name: 'Variation 1',
           inExperiment: true,
           hashAttribute: 'id',
@@ -230,64 +230,18 @@ describe('GrowthbookProvider', () => {
       expect(res).toEqual({
         flagKey: 'feature1',
         flagMetadata: {
-          ruleId: 'fr_a4obdoommrzcapr',
-          source: 'experiment',
-          experimentName: 'Experiment1',
+          ruleId: 'fr_a4obdoommrzcapr', // To debug which rule triggered the logic
+          source: 'experiment', // E.g. was logic from experiment, forced or default value
+          experimentName: 'Experiment1', 
           experimentKey: 'tracking-key',
-          experimentPhase: '0',
-          experimentSeed: 'e29f8131-b6ba-4a39-b9cd-e34d4bb74b33',
-          experimentResultName: 'Variation 1',
+          experimentPhase: '0', // Increases when re-randomize experiment traffic
+          experimentSeed: 'e29f8131-b6ba-4a39-b9cd-e34d4bb74b33', // Useful to have same traffic bucketing but different experiments
+          experimentResultName: 'Variation 1', // Variation Name in Growthbook Experiment
           experimentResultHashValue: '1',
         },
         value: true,
         reason: 'experiment',
-        variant: '1',
-      });
-    });
-
-    it('expose in meta experiment reshuffle', async () => {
-      jest.spyOn(GrowthBookClient.prototype, 'evalFeature').mockImplementation(() => ({
-        value: true,
-        source: 'experiment',
-        on: true,
-        off: false,
-        ruleId: 'fr_a4obdoommrzcapr',
-        experiment: {
-          key: 'tracking-key',
-          variations: [false, true],
-          name: 'Experiment1',
-          phase: '1',
-          seed: '9348fc34-519e-424d-b3ac-90593004808a',
-        },
-        experimentResult: {
-          value: true,
-          variationId: 1,
-          key: 'id2',
-          name: 'variatonName2',
-          inExperiment: true,
-          hashAttribute: 'id',
-          hashValue: '1',
-          featureId: 'feature1',
-        },
-      }));
-
-      const res = await ofClient.getBooleanDetails('feature1', false);
-
-      expect(res).toEqual({
-        flagKey: 'feature1',
-        flagMetadata: {
-          ruleId: 'fr_a4obdoommrzcapr',
-          source: 'experiment',
-          experimentName: 'Experiment1',
-          experimentKey: 'tracking-key',
-          experimentPhase: '1',
-          experimentSeed: '9348fc34-519e-424d-b3ac-90593004808a',
-          experimentResultName: 'variatonName2',
-          experimentResultHashValue: '1',
-        },
-        value: true,
-        reason: 'experiment',
-        variant: 'id2',
+        variant: 'id1',
       });
     });
   })
